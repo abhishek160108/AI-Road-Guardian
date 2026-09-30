@@ -146,12 +146,16 @@ The web dashboard (`dashboard.py`) provides:
 git clone https://github.com/abhishek160108/AI-Road-Guardian.git
 cd AI-Road-Guardian
 
-# 2. Create & activate virtual environment
-python -m venv .venv
+# 2. Create & activate Python 3.11 virtual environment
+py -3.11 -m venv .venv
 .venv\Scripts\activate
 
-# 3. Install dependencies
-pip install -r requirements.txt
+# 3. Install dependencies:
+# For local AI detector (webcam + YOLO11n + MediaPipe + Voice):
+pip install -r requirements-local.txt
+
+# For Streamlit Cloud deployment:
+# Streamlit Cloud automatically uses requirements.txt (fast & lightweight)
 ```
 
 ---

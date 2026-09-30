@@ -192,6 +192,7 @@ telemetry, err_msg = load_telemetry()
 
 # Check Online / Offline State
 is_online = False
+is_simulated = False
 last_update_str = "N/A"
 
 if telemetry and "timestamp" in telemetry:
@@ -203,15 +204,97 @@ if telemetry and "timestamp" in telemetry:
             is_online = True
         last_update_str = t_time.strftime("%H:%M:%S")
     except Exception:
-        is_online = True
         last_update_str = telemetry.get("timestamp", "N/A")
 
+# Cloud / Standalone Simulation Mode (when local camera detector is not connected)
+if not is_online:
+    with st.sidebar:
+        st.divider()
+        st.markdown("### 🎮 Interactive Cloud Simulator")
+        st.caption("Live AI detector is not active on this server. Choose a scenario below to test dashboard telemetry interactively:")
+        sim_scenario = st.selectbox(
+            "Test Scenario:",
+            [
+                "🟢 Normal Driving (Attentive)",
+                "📱 Phone Distraction Hazard",
+                "😴 Drowsiness / Microsleep Alert",
+                "🚨 Critical Multi-Hazard Escalation"
+            ]
+        )
+        is_simulated = True
+
+    now_iso = datetime.now().isoformat()
+    if sim_scenario == "🟢 Normal Driving (Attentive)":
+        telemetry = {
+            "phone_detected": False,
+            "drowsy": False,
+            "face_detected": True,
+            "EAR": 0.31,
+            "risk_score": 0,
+            "risk_level": "LOW RISK",
+            "FPS": 30.0,
+            "session_duration": 48.0,
+            "phone_trigger_count": 0,
+            "drowsiness_trigger_count": 0,
+            "last_alert": "None",
+            "timestamp": now_iso
+        }
+    elif sim_scenario == "📱 Phone Distraction Hazard":
+        telemetry = {
+            "phone_detected": True,
+            "drowsy": False,
+            "face_detected": True,
+            "EAR": 0.29,
+            "risk_score": 40,
+            "risk_level": "MEDIUM RISK",
+            "FPS": 29.4,
+            "session_duration": 65.0,
+            "phone_trigger_count": 1,
+            "drowsiness_trigger_count": 0,
+            "last_alert": "Phone Detected",
+            "timestamp": now_iso
+        }
+    elif sim_scenario == "😴 Drowsiness / Microsleep Alert":
+        telemetry = {
+            "phone_detected": False,
+            "drowsy": True,
+            "face_detected": True,
+            "EAR": 0.16,
+            "risk_score": 50,
+            "risk_level": "MEDIUM RISK",
+            "FPS": 29.8,
+            "session_duration": 92.0,
+            "phone_trigger_count": 0,
+            "drowsiness_trigger_count": 1,
+            "last_alert": "Drowsiness Detected",
+            "timestamp": now_iso
+        }
+    else:  # Critical Multi-Hazard
+        telemetry = {
+            "phone_detected": True,
+            "drowsy": True,
+            "face_detected": True,
+            "EAR": 0.14,
+            "risk_score": 90,
+            "risk_level": "HIGH RISK",
+            "FPS": 28.6,
+            "session_duration": 124.0,
+            "phone_trigger_count": 2,
+            "drowsiness_trigger_count": 2,
+            "last_alert": "Critical: Phone + Drowsy",
+            "timestamp": now_iso
+        }
+    is_online = True
+    last_update_str = datetime.now().strftime("%H:%M:%S")
+
 # Top Status Bar
-status_col1, status_col2, status_col3, status_col4 = st.columns([1.5, 1.2, 1.2, 2])
+status_col1, status_col2, status_col3, status_col4 = st.columns([1.8, 1.1, 1.1, 1.8])
 
 with status_col1:
-    if is_online:
-        st.markdown('**System Status:** <span class="status-badge-online">🟢 ONLINE — MONITORING</span>', unsafe_allow_html=True)
+    if is_simulated:
+        st.markdown('**System Status:** <span class="status-badge-online" style="background-color:#E0F2FE; color:#0369A1;">🔵 SIMULATOR — ACTIVE</span>', unsafe_allow_html=True)
+    elif is_online:
+        st.markdown('**System Status:** <span class="status-badge-online">🟢 ONLINE — LIVE LOCAL</span>', unsafe_allow_html=True)
     else:
         st.markdown('**System Status:** <span class="status-badge-offline">🔴 OFFLINE / WAITING</span>', unsafe_allow_html=True)
 
@@ -228,20 +311,6 @@ with status_col4:
     st.markdown(f"**Last Sync:** `{last_update_str}`")
 
 st.divider()
-
-
-# ==========================================
-# 5. OFFLINE / FALLBACK VIEW
-# ==========================================
-if not is_online:
-    st.info("ℹ️ **AI Detector Engine Not Active**\n\nThe dashboard is currently waiting for live telemetry from `app_voice.py` or `app.py`.")
-    st.markdown("""
-    To start the driver safety detector on your webcam:
-    ```bash
-    python app_voice.py
-    ```
-    *The dashboard will automatically sync and update in real-time as soon as the detector starts.*
-    """)
 
 
 # ==========================================
@@ -400,6 +469,6 @@ st.markdown("""
 # ==========================================
 # 11. AUTO-REFRESH ENGINE
 # ==========================================
-if auto_refresh:
+if auto_refresh and not is_simulated:
     time.sleep(refresh_rate)
     st.rerun()
