@@ -1,0 +1,38 @@
+# Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache & compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Environment variables & secrets
+.env
+*.env
+.env.*
+
+# Logs, local runtime & temporary files
+*.log
+*.tmp
+temp/
+telemetry.json
+telemetry.json.tmp
+alert_history.json
+
+# Local backup files
+*_backup.py
+
+# IDE & OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Large / generated test outputs
+dist/
+build/
+*.egg-info/
